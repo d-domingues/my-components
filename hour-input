@@ -1,0 +1,44 @@
+import { Component, ElementRef, ViewChild } from '@angular/core';
+import { BaseFormControlComponent } from '../base-form-control.component';
+
+@Component({
+    selector: 'cc-time-input',
+    template: ` <input #inputEl [value]="value" (input)="onInput(inputEl.value)" /> `,
+    styleUrls: ['time-input.component.scss'],
+})
+export class TimeInputComponent extends BaseFormControlComponent<string> {
+    @ViewChild('inputEl') inputElRef!: ElementRef<HTMLInputElement>;
+
+    regex = /^$|^[0-2]$|^[01]\d$|^2[0-3]$|^([01]\d|2[0-3]):$|^([01]\d|2[0-3]):[0-5]$|^([01]\d|2[0-3]):[0-5]\d$/;
+
+    get inputEl() {
+        return this.inputElRef?.nativeElement;
+    }
+
+    constructor() {
+        super('');
+    }
+
+    onInput(hourStr: string) {
+        // insertion
+        if (hourStr.length > this.value.length) {
+            if (/^[3-9]$/.test(hourStr)) {
+                hourStr = `0${hourStr}:`;
+            } else if (/^[01]\d$|^2[0-3]$/.test(hourStr)) {
+                hourStr = `${hourStr}:`;
+            }
+        }
+        // deletion
+        else {
+            if (/^\d\d$/.test(hourStr)) {
+                hourStr = hourStr.replace(/^(\d)\d$/, '$1');
+            }
+        }
+
+        if (this.regex.test(hourStr)) {
+            this.value = hourStr;
+        }
+
+        this.inputEl && (this.inputEl.value = this.value);
+    }
+}
