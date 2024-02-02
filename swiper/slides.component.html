@@ -1,0 +1,84 @@
+<div class="slides-title">
+  <h2><ng-content /></h2>
+
+  <ion-button [disabled]="case === 'error'" size="default" fill="clear" (click)="viewMoreClick.emit()">
+    {{ 'buttons.show_more' | transloco }}
+    <ion-icon slot="end" name="arrow-forward-circle-outline" />
+  </ion-button>
+</div>
+
+<swiper-container #swiper init="false">
+  <ng-container [ngSwitch]="case" *transloco="let t">
+    <!-- LOADING SKELETON -->
+    <ng-container *ngSwitchCase="'loading'">
+      <swiper-slide *ngFor="let i of [].constructor(options.slidesPerView)">
+        <ng-container *ngTemplateOutlet="skeleton!.tmpl" />
+      </swiper-slide>
+    </ng-container>
+
+    <ng-container *ngSwitchCase="'no-data'">
+      <swiper-slide class="with-alert">
+        <cbo-alert [message]="t('messages.fetch.no_data')" [showClose]="false" [hidden]="false" />
+      </swiper-slide>
+      <ng-container *ngIf="hasAddButton">
+        <ng-container *ngTemplateOutlet="addSlide" />
+      </ng-container>
+    </ng-container>
+
+    <ng-container *ngSwitchCase="'error'">
+      <swiper-slide class="with-alert error">
+        <cbo-alert [message]="t('messages.fetch.error')" [showClose]="false" [hidden]="false" type="error" />
+      </swiper-slide>
+    </ng-container>
+
+    <ng-container *ngSwitchCase="'success'">
+      <swiper-slide *ngFor="let slide of mainSlides.items">
+        <swiper-container
+          #vSwiper
+          *ngIf="scndSlides; else mainSlidesTmpl"
+          direction="vertical"
+          allow-touch-move="false"
+        >
+          <ng-container *ngTemplateOutlet="mainSlidesTmpl" />
+          <!-- SECONDARY SLIDES -->
+          <swiper-slide>
+            <ng-container *ngTemplateOutlet="scndSlides ? scndSlides.tmpl : null; context: { $implicit: slide }" />
+          </swiper-slide>
+        </swiper-container>
+        <!-- MAIN SLIDES -->
+        <ng-template #mainSlidesTmpl>
+          <swiper-slide>
+            <ng-container *ngTemplateOutlet="mainSlides.tmpl; context: { $implicit: slide }" />
+          </swiper-slide>
+        </ng-template>
+      </swiper-slide>
+      <ng-container *ngIf="hasAddButton">
+        <ng-container *ngTemplateOutlet="addSlide" />
+      </ng-container>
+    </ng-container>
+  </ng-container>
+</swiper-container>
+
+<!-- SLIDES PREVIEWS/NEXT BUTTONS -->
+<ion-item
+  *ngIf="(bigViewport$ | async) && case !== 'loading' && case !== 'error'"
+  class="ion-no-padding slides-ctrl"
+  lines="none"
+>
+  <ion-toggle
+    *ngIf="scndSlides"
+    slot="start"
+    labelPlacement="end"
+    (ionChange)="toggleSecondary($any($event)['detail']?.checked)"
+  >
+    {{ scndSlides.label | transloco }}
+  </ion-toggle>
+  <cbo-swiper-slide-btns slot="end" [swiperEl]="swiper" />
+</ion-item>
+
+<ng-template #addSlide>
+  <!-- ADD BUTTON -->
+  <swiper-slide>
+    <cbo-add (click)="addButtonClick.emit()">{{ 'buttons.add_more' | transloco }}</cbo-add>
+  </swiper-slide>
+</ng-template>
